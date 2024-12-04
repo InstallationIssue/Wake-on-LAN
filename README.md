@@ -58,3 +58,9 @@ To check if your network card supports WOL, you may need to check your systems B
    ```
 
 6. Execute the built executable
+
+   On Macs, or Graphical Linux distros, you can double click the executable file or run the following command
+
+   ```
+   ./<path-to-executable>
+   ```
