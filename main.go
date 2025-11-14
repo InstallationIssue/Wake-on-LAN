@@ -3,17 +3,21 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"flag"
 	"fmt"
+	"log"
 	"net"
 )
 
 const headerByte byte = 0xFF
 
 var (
-	// ipTarget    string
-	macTarget   string
-	ipBroadcast string
-	port        string
+	macTarget          string
+	ipBroadcast        string
+	port               string
+	defaultMacTarget   string
+	defaultIpBroadcast string
+	defaultPort        = "8829"
 )
 
 type MACAddress [6]byte
@@ -49,7 +53,7 @@ func create(hw net.HardwareAddr) (bytes.Buffer, error) {
 }
 
 // Sending Magic Packet
-func send(mp bytes.Buffer) error {
+func send(mp bytes.Buffer, ipBroadcast string, port string) error {
 	conn, err := net.Dial("udp", ipBroadcast+":"+port)
 	if err != nil {
 		return err
@@ -65,19 +69,28 @@ func send(mp bytes.Buffer) error {
 // Main Execution
 func main() {
 
+	flag.StringVar(&macTarget, "mac", defaultMacTarget, "MAC Target for WoL Magic Packet")
+	flag.StringVar(&ipBroadcast, "bc", defaultIpBroadcast, "Broadcast Address on local network")
+	flag.StringVar(&port, "port", defaultPort, "WoL Port (default 8829)")
+	flag.Parse()
+
+	if macTarget == "" || ipBroadcast == "" || port == "" {
+		log.Fatalf("A Default Variable is undefined:\n\tdefaultMacTarget = %s\n\tdefaultIpBroadcast = %s\n\tdefaultPort = %s\n", defaultMacTarget, defaultIpBroadcast, defaultPort)
+	}
+
 	hw, err := net.ParseMAC(macTarget)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	mp, err := create(hw)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
-	err = send(mp)
+	err = send(mp, ipBroadcast, port)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	fmt.Println("Sent Magic Packet")
